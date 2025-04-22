@@ -1,0 +1,17 @@
+[project]
+name = "sifflet-mcp"
+version = "0.1.0"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "chainlit>=2.4.400",
+    "httpx>=0.28.1",
+    "mcp[cli]>=1.6.0",
+    "python-dotenv>=1.1.0",
+    "sifflet-sdk>=0.3.17"
+]
+
+[tool.uv.workspace]
+members = [
+    "sifflet-mcp",
+]
