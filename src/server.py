@@ -21,7 +21,8 @@ mcp = FastMCP("mcpink-server")
 # Load environment variables
 load_dotenv()
 
-API_TOKEN = os.environ.get("API_TOKEN")
+SIFFLET_API_TOKEN = os.environ.get("SIFFLET_API_TOKEN")
+SIFFLET_BACKEND_URL = os.environ.get("SIFFLET_BACKEND_URL", "http://localhost:8090")
 # API token & information
 TOKEN_PREFIX = "Bearer "
 HEADER_AUTHORISATION_NAME = "Authorization"
@@ -34,11 +35,11 @@ QUALITY_TOKEN_NAME = "quality_jwt_token"
 
 def get_backend_api_client() -> ApiClient:
 
-    configuration = Configuration(host="http://localhost:8090")
+    configuration = Configuration(host=SIFFLET_BACKEND_URL)
     api_client = ApiClient(
         configuration,
         header_name=HEADER_AUTHORISATION_NAME,
-        header_value=TOKEN_PREFIX + API_TOKEN,
+        header_value=TOKEN_PREFIX + SIFFLET_API_TOKEN,
     )
     return api_client
 

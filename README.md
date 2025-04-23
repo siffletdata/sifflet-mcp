@@ -15,7 +15,7 @@ Built with Chainlit, the interface provides a chat experience with AI-powered as
 
 ## Prerequisites
 
-- Python 3.8+
+- Python 3.12+
 - `uv` (Python package installer/environment manager)
 - Sifflet backend running locally or remotely
 
@@ -33,15 +33,11 @@ Built with Chainlit, the interface provides a chat experience with AI-powered as
    source .venv/bin/activate
    ```
 
-3. Install dependencies
-   ```bash
-   uv install
-   ```
-
 4. Set up environment variables by creating a `.env` file with:
    ```
    ANTHROPIC_API_KEY=your_anthropic_api_key
-   API_TOKEN=your_sifflet_api_token
+   SIFFLET_API_TOKEN=your_sifflet_api_token
+   SIFFLET_BACKEND_URL=your_sifflet_backend_url
    ```
 
 ## Running the Application
