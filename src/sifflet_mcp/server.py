@@ -1,19 +1,17 @@
-from mcp.server.fastmcp import FastMCP
+import os
+
+import uvicorn
+from dotenv import load_dotenv
+from mcp.server import FastMCP
+from mcp.server.sse import SseServerTransport
 from sifflet_sdk.client import Configuration, ApiClient
 from sifflet_sdk.client.api import incident_api, rule_api, asset_api
-import os
-from dotenv import load_dotenv
-
+from sifflet_sdk.client.model.incident_scope import IncidentScope
 from sifflet_sdk.client.model.incident_search_criteria import IncidentSearchCriteria
-from mcp.server.fastmcp import FastMCP
+from sifflet_sdk.client.model.patch_incident_dto import PatchIncidentDto
 from starlette.applications import Starlette
-from mcp.server.sse import SseServerTransport
 from starlette.requests import Request
 from starlette.routing import Mount, Route
-import uvicorn
-from sifflet_sdk.client.model.patch_incident_dto import PatchIncidentDto
-from sifflet_sdk.client.model.incident_scope import IncidentScope
-
 
 # Create an MCP server
 mcp = FastMCP("mcpink-server")
@@ -140,15 +138,18 @@ async def handle_sse(request: Request) -> None:
     ) as (reader, writer):
         await _server.run(reader, writer, _server.create_initialization_options())
 
+def run_server():
+    # Create the Starlette app with two endpoints
+    app = Starlette(
+        debug=True,
+        routes=[
+            Route("/sse", endpoint=handle_sse),
+            Mount("/messages/", app=sse.handle_post_message),
+        ],
+    )
 
-# Create the Starlette app with two endpoints:
-app = Starlette(
-    debug=True,
-    routes=[
-        Route("/sse", endpoint=handle_sse),
-        Mount("/messages/", app=sse.handle_post_message),
-    ],
-)
+    # Start the server
+    uvicorn.run(app, host="localhost", port=8007)
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="localhost", port=8007)
+    run_server()

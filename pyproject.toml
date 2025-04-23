@@ -1,7 +1,13 @@
 [project]
 name = "sifflet-mcp"
 version = "0.1.0"
+description = "Basic MCP server for Sifflet"
 readme = "README.md"
+authors = [
+    { name = "Baptiste Azéma", email = "baptiste@siffletdata.com" },
+    { name = "Marie Berard", email = "marie@siffletdata.com"},
+    { name = "Pierre Courgeon", email = "pierre.courgeon@siffletdata.com"}
+]
 requires-python = ">=3.13"
 dependencies = [
     "chainlit>=2.4.400",
@@ -11,7 +17,9 @@ dependencies = [
     "sifflet-sdk>=0.3.17"
 ]
 
-[tool.uv.workspace]
-members = [
-    "sifflet-mcp",
-]
+[project.scripts]
+sifflet-mcp = "sifflet_mcp:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
