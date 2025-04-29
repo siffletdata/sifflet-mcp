@@ -1,4 +1,6 @@
+import logging
 import os
+import argparse
 
 import uvicorn
 from dotenv import load_dotenv
@@ -125,20 +127,19 @@ async def open_incident_by_id(incident_id: str) -> dict:
     incident_api_client.patch_incident(id=incident_id, patch_incident_dto=patch_incident_dto)
 
 
-# Set up the SSE transport for MCP communication.
-sse = SseServerTransport("/messages/")
+def run_starlette_sse():
+    # Set up the SSE transport for MCP communication.
+    sse = SseServerTransport("/messages/")
 
+    async def handle_sse(request: Request) -> None:
+        _server = mcp._mcp_server
+        async with sse.connect_sse(
+                request.scope,
+                request.receive,
+                request._send,
+        ) as (reader, writer):
+            await _server.run(reader, writer, _server.create_initialization_options())
 
-async def handle_sse(request: Request) -> None:
-    _server = mcp._mcp_server
-    async with sse.connect_sse(
-        request.scope,
-        request.receive,
-        request._send,
-    ) as (reader, writer):
-        await _server.run(reader, writer, _server.create_initialization_options())
-
-def run_server():
     # Create the Starlette app with two endpoints
     app = Starlette(
         debug=True,
@@ -150,6 +151,18 @@ def run_server():
 
     # Start the server
     uvicorn.run(app, host="localhost", port=8007)
+
+
+def run_server():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--sse", action="store_true", help="Run the server in SSE mode")
+    args = parser.parse_args()
+    if args.sse:
+        logging.info("Starting MCP server SSE mode with Starlette")
+        run_starlette_sse()
+    else:
+        logging.info("Starting MCP server stdio mode")
+        mcp.run()
 
 if __name__ == "__main__":
     run_server()

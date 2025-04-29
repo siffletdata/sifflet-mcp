@@ -4,7 +4,9 @@ A ChatGPT-like assistant for managing Sifflet incidents using Chainlit and Claud
 
 ## Description
 
-This project provides an AI assistant interface for managing Sifflet data quality incidents efficiently. The assistant can perform various actions such as:
+This project provides an AI assistant interface for managing Sifflet data quality incidents efficiently. The assistant can perform various actions
+such as:
+
 - Listing incidents
 - Getting incident details
 - Closing incidents
@@ -33,35 +35,36 @@ Built with Chainlit, the interface provides a chat experience with AI-powered as
    source .venv/bin/activate
    ```
 
-4. Set up environment variables by creating a `.env` file with:
-   ```
-   ANTHROPIC_API_KEY=your_anthropic_api_key
-   SIFFLET_API_TOKEN=your_sifflet_api_token
-   SIFFLET_BACKEND_URL=your_sifflet_backend_url
-   ```
-
-## Running the Application
-
-1. Start the MCP server:
+3. Run the mcp server
    ```bash
-   uv run src/server.py
+   uv run sifflet-mcp [--sse]
    ```
 
-2. In a separate terminal, start the Chainlit application:
-   ```bash
-   uv run chainlit run src/app.py -w
-   ```
+## Setup in Cursor
 
-3. Open your browser at the URL shown in the terminal (typically http://localhost:8000)
+If you used the installation script, the mcp server has been installed in your user directory at ~/.sifflet/sifflet-mcp/.
 
-## Project Structure
+You will need the following information:
+- `<access_token>`: you can find more information on how to generate it [here](https://docs.siffletdata.com/docs/generate-an-api-token)
+- `<your_sifflet_backend_url>`: Full URL to the Sifflet backend for instance: `https://<tenant_name>.siffletdata.com/api/`
 
-- `src/app.py` - Main Chainlit application with Claude AI integration
-- `src/server.py` - MCP server for handling Sifflet API interactions
-- `.env` - Environment variables for API keys and credentials
+```json
+{
+  "mcpServers": {
+    "mcp_server_sifflet": {
+      "command": "<path to repository>/.venv/bin/sifflet-mcp",
+      "env": {
+        "SIFFLET_API_TOKEN": "<access_token>",
+        "SIFFLET_URL": "<your_sifflet_backend_url>"
+      }
+    }
+  }
+}
+```
 
 ## Development
 
 To add new features or tools:
+
 1. Add new tool functions in `server.py` using the `@mcp.tool` decorator
-2. The assistant will automatically discover and use these tools
+2. The server will automatically discover and use these tools
