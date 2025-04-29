@@ -4,7 +4,9 @@ A ChatGPT-like assistant for managing Sifflet incidents using Chainlit and Claud
 
 ## Description
 
-This project provides an AI assistant interface for managing Sifflet data quality incidents efficiently. The assistant can perform various actions such as:
+This project provides an AI assistant interface for managing Sifflet data quality incidents efficiently. The assistant can perform various actions
+such as:
+
 - Listing incidents
 - Getting incident details
 - Closing incidents
@@ -63,5 +65,28 @@ Built with Chainlit, the interface provides a chat experience with AI-powered as
 ## Development
 
 To add new features or tools:
+
 1. Add new tool functions in `server.py` using the `@mcp.tool` decorator
 2. The assistant will automatically discover and use these tools
+
+## Setup in Cursor
+
+If you used the installation script, the mcp server has been installed in your user directory at ~/.sifflet/sifflet-mcp/.
+
+You will need the following information:
+- `<access_token>`: you can find more information on how to generate it [here](https://docs.siffletdata.com/docs/generate-an-api-token)
+- `<your_sifflet_backend_url>`: Full URL to the Sifflet backend on your deployment including for instance: `https://<tenant_name>api.siffletdata.com/api/`
+
+```json
+{
+  "mcpServers": {
+    "mcp_server_sifflet": {
+      "command": "~/.sifflet/sifflet-mcp/.venv/bin/sifflet-mcp",
+      "env": {
+        "SIFFLET_API_TOKEN": "<access_token>",
+        "SIFFLET_URL": "<your_sifflet_backend_url>"
+      }
+    }
+  }
+}
+```
