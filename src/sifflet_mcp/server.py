@@ -1,5 +1,6 @@
 import logging
 import os
+import argparse
 
 import uvicorn
 from dotenv import load_dotenv
@@ -13,7 +14,6 @@ from sifflet_sdk.client.model.patch_incident_dto import PatchIncidentDto
 from starlette.applications import Starlette
 from starlette.requests import Request
 from starlette.routing import Mount, Route
-import argparse
 
 # Create an MCP server
 mcp = FastMCP("mcpink-server")
@@ -155,9 +155,9 @@ def run_starlette_sse():
 
 def run_server():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--chainlit", action="store_true")
+    parser.add_argument("--sse", action="store_true", help="Run the server in SSE mode")
     args = parser.parse_args()
-    if args.chainlit:
+    if args.sse:
         logging.info("Starting MCP server SSE mode with Starlette")
         run_starlette_sse()
     else:
