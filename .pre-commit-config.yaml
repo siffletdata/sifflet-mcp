@@ -1,3 +1,10 @@
+exclude: |
+  (?x)^(
+      .mypy_cache/
+      | .pytest_cache/
+      | .venv/
+  )$
+
 repos:
 - repo: https://github.com/astral-sh/ruff-pre-commit
   # Ruff version.
