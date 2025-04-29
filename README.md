@@ -64,6 +64,10 @@ You will need the following information:
 
 ## Development
 
+```
+uv run pre-commit install
+```
+
 To add new features or tools:
 
 1. Add new tool functions in `server.py` using the `@mcp.tool` decorator
