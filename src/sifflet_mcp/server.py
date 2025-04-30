@@ -7,10 +7,17 @@ from dotenv import load_dotenv
 from mcp.server import FastMCP
 from mcp.server.sse import SseServerTransport
 from sifflet_sdk.client import Configuration, ApiClient
-from sifflet_sdk.client.api import incident_api, rule_api, asset_api
+from sifflet_sdk.client.api import (
+    incident_api,
+    rule_api,
+    asset_api,
+    text_to_monitor_api,
+)
 from sifflet_sdk.client.model.incident_scope import IncidentScope
+from sifflet_sdk.client.model.asset_search_criteria import AssetSearchCriteria
 from sifflet_sdk.client.model.incident_search_criteria import IncidentSearchCriteria
 from sifflet_sdk.client.model.patch_incident_dto import PatchIncidentDto
+from sifflet_sdk.client.model.text_to_monitor_request_dto import TextToMonitorRequestDto
 from starlette.applications import Starlette
 from starlette.requests import Request
 from starlette.routing import Mount, Route
@@ -48,6 +55,16 @@ async def asset_by_urn(asset_urn: str) -> dict:
     asset_client = asset_api.AssetApi(get_backend_api_client())
     asset_details = asset_client.get_asset_by_urn(urn=asset_urn)
     return {"asset": asset_details}
+
+
+@mcp.tool("search_asset")
+async def search_asset(items_per_page: int, page: int, text_search: str) -> dict:
+    asset_client = asset_api.AssetApi(get_backend_api_client())
+    asset_search_criteria = AssetSearchCriteria(
+        page=page, items_per_page=items_per_page, text_search=text_search
+    )
+    asset_details = asset_client.get_all_assets(asset_search_criteria)
+    return {"assets": asset_details}
 
 
 # Add incident resource
@@ -142,6 +159,21 @@ async def open_incident_by_id(incident_id: str) -> dict:
     )
 
 
+# Monitor as code
+@mcp.tool("get_monitor_code_by_description")
+async def get_monitor_code_by_description(
+    description: str, dataset_ids: list[str]
+) -> dict:
+    text_to_monitor_client = text_to_monitor_api.TextToMonitorApi(
+        get_backend_api_client()
+    )
+    text_to_monitor_dto = TextToMonitorRequestDto(
+        dataset_ids=dataset_ids, input_text=description
+    )
+    generated_monitor = text_to_monitor_client.text_to_monitor(text_to_monitor_dto)
+    return generated_monitor
+
+
 def run_starlette_sse():
     # Set up the SSE transport for MCP communication.
     sse = SseServerTransport("/messages/")
@@ -178,7 +210,3 @@ def run_server():
     else:
         logging.info("Starting MCP server stdio mode")
         mcp.run()
-
-
-if __name__ == "__main__":
-    run_server()
