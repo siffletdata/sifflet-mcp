@@ -60,13 +60,17 @@ async def call_tool(tool_use):
             break
 
     if not mcp_name:
-        current_step.output = json.dumps({"error": f"Tool {tool_name} not found in any MCP connection"})
+        current_step.output = json.dumps(
+            {"error": f"Tool {tool_name} not found in any MCP connection"}
+        )
         return current_step.output
 
     mcp_session, _ = cl.context.session.mcp_sessions.get(mcp_name)
 
     if not mcp_session:
-        current_step.output = json.dumps({"error": f"MCP {mcp_name} not found in any MCP connection"})
+        current_step.output = json.dumps(
+            {"error": f"MCP {mcp_name} not found in any MCP connection"}
+        )
         return current_step.output
 
     try:
@@ -101,7 +105,9 @@ async def call_claude_with_retry(chat_messages, max_retries=3, initial_delay=1):
 
         except (RateLimitError, APIStatusError) as e:
             if attempt == max_retries:
-                await msg.stream_token("\n\nSorry, the service is currently experiencing high load. Please try again later.")
+                await msg.stream_token(
+                    "\n\nSorry, the service is currently experiencing high load. Please try again later."
+                )
                 await msg.send()
                 raise e
 
@@ -110,7 +116,9 @@ async def call_claude_with_retry(chat_messages, max_retries=3, initial_delay=1):
             attempt += 1
 
             # Inform user about retry
-            await msg.stream_token(f"\n\nService temporarily overloaded. Retrying in {delay:.1f} seconds... (Attempt {attempt}/{max_retries})")
+            await msg.stream_token(
+                f"\n\nService temporarily overloaded. Retrying in {delay:.1f} seconds... (Attempt {attempt}/{max_retries})"
+            )
             await msg.send()
 
             # Wait before retrying

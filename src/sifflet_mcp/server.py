@@ -34,7 +34,6 @@ QUALITY_TOKEN_NAME = "quality_jwt_token"
 
 
 def get_backend_api_client() -> ApiClient:
-
     configuration = Configuration(host=SIFFLET_BACKEND_URL)
     api_client = ApiClient(
         configuration,
@@ -63,7 +62,14 @@ async def asset_by_urn(asset_urn: str) -> dict:
           Pages start at 0.
           """,
 )
-def get_all_incidents(items_per_page: int, page: int, status: list[str], text_search: str, user: list[str], sort: str = "desc"):
+def get_all_incidents(
+    items_per_page: int,
+    page: int,
+    status: list[str],
+    text_search: str,
+    user: list[str],
+    sort: str = "desc",
+):
     if sort not in ["asc", "desc"]:
         raise ValueError("Sort must be either 'asc' or 'desc'")
     sort_list = ["createdDate,DESC"] if sort == "desc" else ["createdDate,ASC"]
@@ -75,25 +81,28 @@ def get_all_incidents(items_per_page: int, page: int, status: list[str], text_se
         text_search=text_search,
         user=user,
     )
-    return {"incidents": incident_api.IncidentApi(get_backend_api_client()).get_all_incident(incident_search_criteria)}
+    return {
+        "incidents": incident_api.IncidentApi(
+            get_backend_api_client()
+        ).get_all_incident(incident_search_criteria)
+    }
 
 
 # Add incident resource
 @mcp.tool("get_incident_by_issue_number")
 def close_incident(issue_nbr: int) -> dict:
-    return {"incident": incident_api.IncidentApi(get_backend_api_client()).get_incident_by_issue_number(issue_nbr)}
-
-
-@mcp.tool("incident")
-async def incident_tool(incident_number: int) -> dict:
-    incident_client = incident_api.IncidentApi(get_backend_api_client())
-    incident_details = incident_client.get_incident_by_issue_number(incident_number)
-    return {"incident": incident_details}
+    return {
+        "incident": incident_api.IncidentApi(
+            get_backend_api_client()
+        ).get_incident_by_issue_number(issue_nbr)
+    }
 
 
 @mcp.tool("get_incident_details_by_issue_number")
 async def incident_tool(issue_number: int) -> dict:
-    incident_scope: IncidentScope = incident_api.IncidentApi(get_backend_api_client()).get_incident_scope_by_issue_number(issue_number)
+    incident_scope: IncidentScope = incident_api.IncidentApi(
+        get_backend_api_client()
+    ).get_incident_scope_by_issue_number(issue_number)
     return {"incident_details": incident_scope}
 
 
@@ -105,7 +114,9 @@ async def get_rule_by_id(rule_id: int) -> dict:
 
 
 @mcp.tool("close_incident_by_id_and_should_qualify_monitor")
-async def close_incident_by_id_and_should_qualify_monitor(incident_id: str, should_qualify_monitor: bool) -> dict:
+async def close_incident_by_id_and_should_qualify_monitor(
+    incident_id: str, should_qualify_monitor: bool
+) -> dict:
     incident_api_client = incident_api.IncidentApi(get_backend_api_client())
     if should_qualify_monitor:
         qualification = "QUALIFIED_MONITORS_REVIEWED"
@@ -116,7 +127,9 @@ async def close_incident_by_id_and_should_qualify_monitor(incident_id: str, shou
         status="CLOSED",
         qualification=qualification,
     )
-    incident_api_client.patch_incident(id=incident_id, patch_incident_dto=patch_incident_dto)
+    incident_api_client.patch_incident(
+        id=incident_id, patch_incident_dto=patch_incident_dto
+    )
 
 
 @mcp.tool("open_incident_by_id")
@@ -124,7 +137,9 @@ async def open_incident_by_id(incident_id: str) -> dict:
     incident_api_client = incident_api.IncidentApi(get_backend_api_client())
 
     patch_incident_dto = PatchIncidentDto(status="OPEN", qualification=None)
-    incident_api_client.patch_incident(id=incident_id, patch_incident_dto=patch_incident_dto)
+    incident_api_client.patch_incident(
+        id=incident_id, patch_incident_dto=patch_incident_dto
+    )
 
 
 def run_starlette_sse():
@@ -134,9 +149,9 @@ def run_starlette_sse():
     async def handle_sse(request: Request) -> None:
         _server = mcp._mcp_server
         async with sse.connect_sse(
-                request.scope,
-                request.receive,
-                request._send,
+            request.scope,
+            request.receive,
+            request._send,
         ) as (reader, writer):
             await _server.run(reader, writer, _server.create_initialization_options())
 
@@ -163,6 +178,7 @@ def run_server():
     else:
         logging.info("Starting MCP server stdio mode")
         mcp.run()
+
 
 if __name__ == "__main__":
     run_server()
