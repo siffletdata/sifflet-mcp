@@ -75,8 +75,8 @@ Then, add the following configuration to your `claude_desktop_config.json` file:
     "sifflet-mcp": {
       "command": "/Users/baptiste/workspace/sifflet-mcp/.venv/bin/sifflet-mcp",
       "env": {
-        "SIFFLET_API_TOKEN": "eyJhbGciOiJIUzUxMiJ9.eyJqdGkiOiI1OTk4MTg2Yi05YjJmLTQzMGQtODMxNy1hZWYxNDNjOTFkMDkiLCJpc3MiOiJBY2Nlc3NUb2tlblNlcnZpY2UiLCJleHAiOjE4MDg0MDMwMTcsImF1dGhvcml0aWVzIjoiQWRtaW4ifQ.nsFKUuC2s8ZHrhPeNgyjgu07CUVDq7DJyScUn1ln74IB4SRo3OaTdKi0X2xMIIycojsgyPrBSOQ_y0v7EFDspQ",
-        "SIFFLET_URL": "http://localhost:8090"
+        "SIFFLET_API_TOKEN": "<access_token>",
+        "SIFFLET_URL": "<your_sifflet_backend_url>"
       }
     }
   }
