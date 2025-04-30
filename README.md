@@ -15,45 +15,31 @@ such as:
 
 Built with Chainlit, the interface provides a chat experience with AI-powered assistance backed by Claude 3.5 Sonnet.
 
-## Prerequisites
+## Usage
+### Prerequisites
 
-- Python 3.12+
-- `uv` (Python package installer/environment manager)
-- Sifflet backend running locally or remotely
+- [`uv`](https://docs.astral.sh/uv/) (Python package installer/environment manager)
+  ```bash
+    # uv installation script for Linux/MacOS
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+  ```
+- A Sifflet backend running locally or remotely. You will need the following information:
+  - `<access_token>`: you can find more information on how to generate it [here](https://docs.siffletdata.com/docs/generate-an-api-token)
+  - `<your_sifflet_backend_url>`: Full URL to the Sifflet backend for instance: `https://<tenant_name>.siffletdata.com/api/`
 
-## Environment Setup
 
-1. Clone the repository
-   ```bash
-   git clone https://github.com/siffletdata/sifflet-mcp.git
-   cd sifflet-mcp
-   ```
 
-2. Create and activate a virtual environment with `uv`
-   ```bash
-   uv venv
-   source .venv/bin/activate
-   ```
+### Using with MCP Clients
 
-3. Run the mcp server
-   ```bash
-   uv run sifflet-mcp [--sse]
-   ```
+#### Cursor
 
-## Using with MCP Clients
+Add the following configuration in the `mcp.json`. Follow [Cursor instructions](https://docs.cursor.com/context/model-context-protocol#configuring-mcp-servers) to set it up.
 
-If you used the installation script, the mcp server has been installed in your user directory at ~/.sifflet/sifflet-mcp/.
-
-You will need the following information:
-- `<access_token>`: you can find more information on how to generate it [here](https://docs.siffletdata.com/docs/generate-an-api-token)
-- `<your_sifflet_backend_url>`: Full URL to the Sifflet backend for instance: `https://<tenant_name>.siffletdata.com/api/`
-
-### Cursor
 ```json
 {
   "mcpServers": {
     "mcp_server_sifflet": {
-      "command": "<path to repository>/.venv/bin/sifflet-mcp",
+      "command": "uv run --with sifflet-mcp --no-project sifflet-mcp",
       "env": {
         "SIFFLET_API_TOKEN": "<access_token>",
         "SIFFLET_URL": "<your_sifflet_backend_url>"
@@ -63,7 +49,7 @@ You will need the following information:
 }
 ```
 
-### Claude
+#### Claude
 
 Follow the instructions in the [Claude documentation](https://modelcontextprotocol.io/quickstart/user#2-add-the-filesystem-mcp-server) to set up `claude_desktop_config.json`.
 
@@ -73,7 +59,7 @@ Then, add the following configuration to your `claude_desktop_config.json` file:
 {
   "mcpServers": {
     "sifflet-mcp": {
-      "command": "<path to repository>/.venv/bin/sifflet-mcp",
+      "command": "uv run --with sifflet-mcp --no-project sifflet-mcp",
       "env": {
         "SIFFLET_API_TOKEN": "<access_token>",
         "SIFFLET_URL": "<your_sifflet_backend_url>"
@@ -87,8 +73,18 @@ Then, add the following configuration to your `claude_desktop_config.json` file:
 
 ## Development
 
-```
+
+Environment Setup
+```bash
+# clone the repository
+git clone https://github.com/siffletdata/sifflet-mcp.git
+cd sifflet-mcp
+ # create a virtual environment
+uv venv
+# install pre-commit
 uv run pre-commit install
+# run the server
+uv run sifflet-mcp [--sse]
 ```
 
 To add new features or tools:
