@@ -73,7 +73,7 @@ Then, add the following configuration to your `claude_desktop_config.json` file:
 {
   "mcpServers": {
     "sifflet-mcp": {
-      "command": "/Users/baptiste/workspace/sifflet-mcp/.venv/bin/sifflet-mcp",
+      "command": "<path to repository>/.venv/bin/sifflet-mcp",
       "env": {
         "SIFFLET_API_TOKEN": "<access_token>",
         "SIFFLET_URL": "<your_sifflet_backend_url>"
