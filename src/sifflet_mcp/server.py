@@ -16,7 +16,7 @@ from starlette.requests import Request
 from starlette.routing import Mount, Route
 
 # Create an MCP server
-mcp = FastMCP("mcpink-server")
+mcp = FastMCP("sifflet-mcp")
 
 # Load environment variables
 load_dotenv()

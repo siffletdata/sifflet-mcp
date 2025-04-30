@@ -40,7 +40,7 @@ Built with Chainlit, the interface provides a chat experience with AI-powered as
    uv run sifflet-mcp [--sse]
    ```
 
-## Setup in Cursor
+## Using with MCP Clients
 
 If you used the installation script, the mcp server has been installed in your user directory at ~/.sifflet/sifflet-mcp/.
 
@@ -48,6 +48,7 @@ You will need the following information:
 - `<access_token>`: you can find more information on how to generate it [here](https://docs.siffletdata.com/docs/generate-an-api-token)
 - `<your_sifflet_backend_url>`: Full URL to the Sifflet backend for instance: `https://<tenant_name>.siffletdata.com/api/`
 
+### Cursor
 ```json
 {
   "mcpServers": {
@@ -60,6 +61,28 @@ You will need the following information:
     }
   }
 }
+```
+
+### Claude
+
+Follow the instructions in the [Claude documentation](https://modelcontextprotocol.io/quickstart/user#2-add-the-filesystem-mcp-server) to set up `claude_desktop_config.json`.
+
+Then, add the following configuration to your `claude_desktop_config.json` file:
+
+```json
+{
+  "mcpServers": {
+    "sifflet-mcp": {
+      "command": "<path to repository>/.venv/bin/sifflet-mcp",
+      "env": {
+        "SIFFLET_API_TOKEN": "<access_token>",
+        "SIFFLET_URL": "<your_sifflet_backend_url>"
+      }
+    }
+  }
+}
+
+
 ```
 
 ## Development
