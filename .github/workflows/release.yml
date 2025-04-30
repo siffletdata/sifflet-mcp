@@ -16,6 +16,7 @@ jobs:
     permissions:
       # mandatory for https://github.com/pypa/gh-action-pypi-publish
       id-token: write
+      contents: read
     steps:
       - uses: actions/checkout@v4
       
