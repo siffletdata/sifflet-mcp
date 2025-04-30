@@ -210,3 +210,7 @@ def run_server():
     else:
         logging.info("Starting MCP server stdio mode")
         mcp.run()
+
+
+if __name__ == "__main__":
+    run_server()
