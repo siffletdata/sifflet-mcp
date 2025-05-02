@@ -29,7 +29,7 @@ mcp = FastMCP("sifflet-mcp")
 def get_backend_api_client() -> ApiClient:
     # API token & information
     token_prefix = "Bearer "
-    header_authorisation_name = "Authorization"
+    header_authorization_name = "Authorization"
 
     if SIFFLET_API_TOKEN is None:
         logger.error(
@@ -45,7 +45,7 @@ def get_backend_api_client() -> ApiClient:
     configuration = Configuration(host=SIFFLET_BACKEND_URL)
     api_client = ApiClient(
         configuration,
-        header_name=header_authorisation_name,
+        header_name=header_authorization_name,
         header_value=token_prefix + SIFFLET_API_TOKEN,
     )
     return api_client
