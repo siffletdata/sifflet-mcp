@@ -1,0 +1,36 @@
+name: Publish to PyPI
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (must match pyproject.toml)'
+        required: true
+        type: string
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      # mandatory for https://github.com/pypa/gh-action-pypi-publish
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Verify version
+        run: |
+          PYPROJECT_VERSION=$(grep -oP 'version = "\K[^"]+' pyproject.toml)
+          if [ "$PYPROJECT_VERSION" != "${{ github.event.inputs.version }}" ]; then
+            echo "Error: Input version (${{ github.event.inputs.version }}) does not match pyproject.toml version ($PYPROJECT_VERSION)"
+            exit 1
+          fi
+
+      - name: Build package
+        run: uv build
+      
+      - name: Publish package to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
