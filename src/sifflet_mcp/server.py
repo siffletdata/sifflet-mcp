@@ -1,6 +1,7 @@
+import argparse
 import logging
 import os
-import argparse
+from typing import List
 
 import uvicorn
 from dotenv import load_dotenv
@@ -12,11 +13,24 @@ from sifflet_sdk.client.api import (
     rule_api,
     asset_api,
     text_to_monitor_api,
+    assets_api,
 )
 from sifflet_sdk.client.model.incident_scope import IncidentScope
-from sifflet_sdk.client.model.asset_search_criteria import AssetSearchCriteria
 from sifflet_sdk.client.model.incident_search_criteria import IncidentSearchCriteria
 from sifflet_sdk.client.model.patch_incident_dto import PatchIncidentDto
+from sifflet_sdk.client.model.public_asset_filter_dto import PublicAssetFilterDto
+from sifflet_sdk.client.model.public_asset_pagination_dto import (
+    PublicAssetPaginationDto,
+)
+from sifflet_sdk.client.model.public_asset_search_criteria_dto import (
+    PublicAssetSearchCriteriaDto,
+)
+from sifflet_sdk.client.model.public_reference_by_id_or_email_dto import (
+    PublicReferenceByIdOrEmailDto,
+)
+from sifflet_sdk.client.model.public_reference_by_id_or_name_dto import (
+    PublicReferenceByIdOrNameDto,
+)
 from sifflet_sdk.client.model.text_to_monitor_request_dto import TextToMonitorRequestDto
 from starlette.applications import Starlette
 from starlette.requests import Request
@@ -41,7 +55,7 @@ QUALITY_TOKEN_NAME = "quality_jwt_token"
 
 
 def get_backend_api_client() -> ApiClient:
-    configuration = Configuration(host=SIFFLET_BACKEND_URL)
+    configuration = Configuration(host=SIFFLET_BACKEND_URL, discard_unknown_keys=False)
     api_client = ApiClient(
         configuration,
         header_name=HEADER_AUTHORISATION_NAME,
@@ -57,13 +71,45 @@ async def asset_by_urn(asset_urn: str) -> dict:
     return {"asset": asset_details}
 
 
-@mcp.tool("search_asset")
-async def search_asset(items_per_page: int, page: int, text_search: str) -> dict:
-    asset_client = asset_api.AssetApi(get_backend_api_client())
-    asset_search_criteria = AssetSearchCriteria(
-        page=page, items_per_page=items_per_page, text_search=text_search
+@mcp.tool(
+    "search_asset",
+    description="""
+        Search assets, tables, dashboards, pipelines.
+        asset_type can be one of the following: TABLE_AND_VIEW, PIPELINE, DASHBOARD, ML_MODEL
+        health_status can be one of the following: URGENT_INCIDENTS, HIGH_RISK_INCIDENTS, NO_INCIDENTS, NOT_MONITORED, UNSUPPORTED
+        owners is a list of owners emails associated with the asset
+        tags is a list of tags associated with the asset
+        text_search is a string to search in the asset name or description
+        """,
+)
+async def search_asset(
+    items_per_page: int,
+    page: int,
+    text_search: str,
+    asset_type: List[str],
+    health_status: List[str],
+    owners: List[str],
+    tags: List[str],
+) -> dict:
+    # use public API
+    asset_client = assets_api.AssetsApi(get_backend_api_client())
+    owners_list = [PublicReferenceByIdOrEmailDto(email=owner) for owner in owners]
+    tag_list = [PublicReferenceByIdOrNameDto(name=tag) for tag in tags]
+
+    asset_search_criteria = PublicAssetSearchCriteriaDto(
+        pagination=PublicAssetPaginationDto(
+            items_per_page=items_per_page,
+            page=page,
+        ),
+        filter=PublicAssetFilterDto(
+            text_search=text_search,
+            asset_type=asset_type,
+            health_status=health_status,
+            owners=owners_list,
+            tags=tag_list,
+        ),
     )
-    asset_details = asset_client.get_all_assets(asset_search_criteria)
+    asset_details = asset_client.public_get_assets(asset_search_criteria)
     return {"assets": asset_details}
 
 
