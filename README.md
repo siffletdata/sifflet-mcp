@@ -73,7 +73,6 @@ Then, add the following configuration to your `claude_desktop_config.json` file:
 
 ## Development
 
-
 Environment Setup
 ```bash
 # clone the repository
@@ -85,6 +84,10 @@ uv venv
 uv run pre-commit install
 # run the server
 uv run sifflet-mcp [--sse]
+
+# Cursor setup: mcp.json or equivalent 
+# You may need to put the full path to the uv executable in the command field. You can get this by running which uv on MacOS/Linux or where uv on Windows.
+uv --directory <PATH_TO_PARENT_FOLDER>/sifflet-mcp run src/sifflet_mcp/server.py
 ```
 
 To add new features or tools:
