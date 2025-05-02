@@ -78,7 +78,7 @@ Environment Setup
 # clone the repository
 git clone https://github.com/siffletdata/sifflet-mcp.git
 cd sifflet-mcp
- # create a virtual environment
+# create a virtual environment
 uv venv
 # install pre-commit
 uv run pre-commit install
