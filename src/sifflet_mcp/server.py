@@ -15,30 +15,38 @@ from starlette.applications import Starlette
 from starlette.requests import Request
 from starlette.routing import Mount, Route
 
-# Create an MCP server
-mcp = FastMCP("sifflet-mcp")
+logger = logging.getLogger(__name__)
 
 # Load environment variables
 load_dotenv()
-
 SIFFLET_API_TOKEN = os.environ.get("SIFFLET_API_TOKEN")
-SIFFLET_BACKEND_URL = os.environ.get("SIFFLET_BACKEND_URL", "http://localhost:8090")
-# API token & information
-TOKEN_PREFIX = "Bearer "
-HEADER_AUTHORISATION_NAME = "Authorization"
-HEADER_APP_NAME = "X-Application-Name"
+SIFFLET_BACKEND_URL = os.environ.get("SIFFLET_BACKEND_URL")
 
-# Token types
-PREDICTION_TOKEN_NAME = "prediction_jwt_token"
-QUALITY_TOKEN_NAME = "quality_jwt_token"
+# Create the MCP server
+mcp = FastMCP("sifflet-mcp")
 
 
 def get_backend_api_client() -> ApiClient:
+    # API token & information
+    token_prefix = "Bearer "
+    header_authorisation_name = "Authorization"
+
+    if SIFFLET_API_TOKEN is None:
+        logger.error(
+            "SIFFLET_API_TOKEN environment variable not set in Sifflet MCP configuration"
+        )
+        raise ValueError("SIFFLET_API_TOKEN environment variable not set")
+    if SIFFLET_BACKEND_URL is None:
+        logger.error("SIFFLET_BACKEND_URL environment variable not set")
+        raise ValueError(
+            "SIFFLET_BACKEND_URL environment variable not set in Sifflet MCP configuration"
+        )
+
     configuration = Configuration(host=SIFFLET_BACKEND_URL)
     api_client = ApiClient(
         configuration,
-        header_name=HEADER_AUTHORISATION_NAME,
-        header_value=TOKEN_PREFIX + SIFFLET_API_TOKEN,
+        header_name=header_authorisation_name,
+        header_value=token_prefix + SIFFLET_API_TOKEN,
     )
     return api_client
 
@@ -173,10 +181,10 @@ def run_server():
     parser.add_argument("--sse", action="store_true", help="Run the server in SSE mode")
     args = parser.parse_args()
     if args.sse:
-        logging.info("Starting MCP server SSE mode with Starlette")
+        logger.info("Starting MCP server SSE mode with Starlette")
         run_starlette_sse()
     else:
-        logging.info("Starting MCP server stdio mode")
+        logger.info("Starting MCP server stdio mode")
         mcp.run()
 
 
