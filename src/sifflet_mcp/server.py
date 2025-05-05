@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from mcp.server import FastMCP
 from mcp.server.sse import SseServerTransport
 from sifflet_sdk.client import Configuration, ApiClient
-from sifflet_sdk.client.api import incident_api, rule_api, asset_api
+from sifflet_sdk.client.api import incident_api, rule_api, asset_api, lineage_api
 from sifflet_sdk.client.model.incident_scope import IncidentScope
 from sifflet_sdk.client.model.incident_search_criteria import IncidentSearchCriteria
 from sifflet_sdk.client.model.patch_incident_dto import PatchIncidentDto
@@ -148,6 +148,20 @@ async def open_incident_by_id(incident_id: str) -> dict:
     incident_api_client.patch_incident(
         id=incident_id, patch_incident_dto=patch_incident_dto
     )
+
+
+@mcp.tool(
+    "get_downstream_assets_of_asset",
+    description="""
+          Get all downstream assets of an asset.
+          """,
+)
+def get_downstream_assets_of_asset(urn: str):
+    lineage_api_client = lineage_api.LineageApi(get_backend_api_client())
+    downstreams = lineage_api_client.get_lineage_downstreams_by_urn(
+        urn=urn, _check_return_type=False
+    )
+    return {"downstreams": downstreams}
 
 
 def run_starlette_sse():

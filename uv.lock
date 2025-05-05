@@ -1706,7 +1706,7 @@ requires-dist = [
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "mcp", extras = ["cli"], specifier = ">=1.6.0" },
     { name = "python-dotenv", specifier = ">=1.1.0" },
-    { name = "sifflet-sdk", specifier = ">=0.3.17" },
+    { name = "sifflet-sdk", specifier = ">=0.3.18" },
 ]
 
 [package.metadata.requires-dev]
@@ -1717,7 +1717,7 @@ dev = [
 
 [[package]]
 name = "sifflet-sdk"
-version = "0.3.17"
+version = "0.3.18"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pyjwt" },
@@ -1725,9 +1725,9 @@ dependencies = [
     { name = "pyyaml" },
     { name = "requests" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/e5/cb/4398171aa968416d74229b4a22ffd79ec8e2d62f40c3752c6976f2ea5439/sifflet_sdk-0.3.17.tar.gz", hash = "sha256:721ca541f55afe99fc4dd90f5824d990f85d80a7514c0d1f846106c71afa5a2c", size = 680998 }
+sdist = { url = "https://files.pythonhosted.org/packages/9c/d3/3c337485b8f5240e04be2a29d0dfae662bdde986d883572b55e6d0706759/sifflet_sdk-0.3.18.tar.gz", hash = "sha256:79b984c8365f3dd3b5cde43c4809330ef8fc7f3b43c53c019afef5ef1172fdc6", size = 726288 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/9f/9e/3aac5264f67244ade17c3c059478ab1c2b45c79673a42cfc63321d63f0d5/sifflet_sdk-0.3.17-py3-none-any.whl", hash = "sha256:be8bf007a6f81e9a042684043ad1a01325b1b52bc9939490e6acf7f5db98ac9e", size = 3029692 },
+    { url = "https://files.pythonhosted.org/packages/d0/60/cb1942d384482520fc143d73c7366c7f1efb63df6f0c383c0257900b6d4e/sifflet_sdk-0.3.18-py3-none-any.whl", hash = "sha256:b5bf5bca2059ac89c1f2e70633b55147865657b9dca50e0a3f7619a907e4c132", size = 3377767 },
 ]
 
 [[package]]
