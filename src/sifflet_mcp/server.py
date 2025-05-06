@@ -232,15 +232,15 @@ async def get_monitor_code_by_description(
 @mcp.tool(
     "get_downstream_assets_of_asset",
     description="""
-          Get all downstream assets of an asset.
+          Get all downstream assets of an asset. An Urn is the unique identifier a asset, for example dataset:0826ce5c-7027-4857-aa47-b639265d1867. It can be found when you search for an asset.
           """,
 )
-def get_downstream_assets_of_asset(urn: str):
+async def get_downstream_assets_of_asset(urn: str):
     lineage_api_client = lineage_api.LineageApi(get_backend_api_client())
     downstreams = lineage_api_client.get_lineage_downstreams_by_urn(
         urn=urn, _check_return_type=False
     )
-    return {"downstreams": downstreams}
+    return str({"downstreams": downstreams})
 
 
 def run_starlette_sse():
