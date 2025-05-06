@@ -240,7 +240,9 @@ async def get_downstream_assets_of_asset(urn: str):
     downstreams = lineage_api_client.get_lineage_downstreams_by_urn(
         urn=urn, _check_return_type=False
     )
-    return str({"downstreams": downstreams})
+    # We need to convert the downstreams to a string to avoid getting the error "TypeError Object of type LineageEntityDto is not JSON serializable". See PLTE-1769.
+    downstreams_string = str(downstreams)
+    return {"downstreams": downstreams_string}
 
 
 def run_starlette_sse():
