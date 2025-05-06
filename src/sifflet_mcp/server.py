@@ -225,7 +225,7 @@ async def get_monitor_code_by_description(
         dataset_ids=dataset_ids, input_text=description
     )
     generated_monitor = text_to_monitor_client.text_to_monitor(text_to_monitor_dto)
-    return generated_monitor
+    return generated_monitor.yaml_code
 
 
 def run_starlette_sse():
