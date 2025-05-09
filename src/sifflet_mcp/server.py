@@ -14,6 +14,7 @@ from sifflet_sdk.client.api import (
     asset_api,
     text_to_monitor_api,
     assets_api,
+    lineage_api,
 )
 from sifflet_sdk.client.model.incident_scope import IncidentScope
 from sifflet_sdk.client.model.incident_search_criteria import IncidentSearchCriteria
@@ -226,6 +227,22 @@ async def get_monitor_code_by_description(
     )
     generated_monitor = text_to_monitor_client.text_to_monitor(text_to_monitor_dto)
     return generated_monitor.yaml_code
+
+
+@mcp.tool(
+    "get_downstream_assets_of_asset",
+    description="""
+          Get all downstream assets of an asset. An Urn is the unique identifier a asset, for example dataset:0826ce5c-7027-4857-aa47-b639265d1867. It can be found when you search for an asset.
+          """,
+)
+async def get_downstream_assets_of_asset(urn: str):
+    lineage_api_client = lineage_api.LineageApi(get_backend_api_client())
+    downstreams = lineage_api_client.get_lineage_downstreams_by_urn(
+        urn=urn, _check_return_type=False
+    )
+    # We need to convert the downstreams to a string to avoid getting the error "TypeError Object of type LineageEntityDto is not JSON serializable". See PLTE-1769.
+    downstreams_string = str(downstreams)
+    return {"downstreams": downstreams_string}
 
 
 def run_starlette_sse():
