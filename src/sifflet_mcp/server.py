@@ -64,7 +64,7 @@ def get_backend_api_client() -> ApiClient:
             "SIFFLET_BACKEND_URL environment variable not set in Sifflet MCP configuration"
         )
 
-    configuration = Configuration(host=SIFFLET_BACKEND_URL, discard_unknown_keys=False)
+    configuration = Configuration(host=SIFFLET_BACKEND_URL)
     api_client = ApiClient(
         configuration,
         header_name=header_authorization_name,
@@ -73,7 +73,12 @@ def get_backend_api_client() -> ApiClient:
     return api_client
 
 
-@mcp.tool("asset_by_urn")
+@mcp.tool(
+    "asset_by_urn",
+    description="""
+        Get asset information by urn. The urn is the unique identifier a asset, for example dataset:0826ce5c-7027-4857-aa47-b639265d1867. It can be found when you search for an asset.
+        """,
+)
 async def asset_by_urn(asset_urn: str) -> dict:
     asset_client = asset_api.AssetApi(get_backend_api_client())
     asset_details = asset_client.get_asset_by_urn(urn=asset_urn)
@@ -119,7 +124,7 @@ async def search_asset(
         ),
     )
     asset_details = asset_client.public_get_assets(asset_search_criteria)
-    return {"assets": asset_details}
+    return {"assets": str(asset_details)}
 
 
 # Add incident resource
@@ -170,7 +175,12 @@ def close_incident(issue_nbr: int) -> dict:
     }
 
 
-@mcp.tool("get_incident_details_by_issue_number")
+@mcp.tool(
+    "get_incident_details_by_issue_number",
+    description="""
+        Get incident details by issue number. The issue number is the id of the incident.
+        """,
+)
 async def incident_tool(issue_number: int) -> dict:
     incident_scope: IncidentScope = incident_api.IncidentApi(
         get_backend_api_client()
@@ -178,8 +188,13 @@ async def incident_tool(issue_number: int) -> dict:
     return {"incident_details": incident_scope}
 
 
-@mcp.tool("get_rule_by_id")
-async def get_rule_by_id(rule_id: int) -> dict:
+@mcp.tool(
+    "get_monitor_by_id",
+    description="""
+          Get a monitor by id. The id is the monitor id.
+          """,
+)
+async def get_monitor_by_id(rule_id: int) -> dict:
     rule_api_client = rule_api.RuleApi(get_backend_api_client())
     rule_dto = rule_api_client.get_sifflet_rule_by_id(id=rule_id)
     return {"rule": rule_dto}

@@ -1,19 +1,16 @@
-# Sifflet MCP - AI-Powered Incident Management
+# Sifflet MCP
 
-A ChatGPT-like assistant for managing Sifflet incidents using Chainlit and Claude AI.
+A Model Context Protocol (MCP) server for interacting with [Sifflet](https://www.siffletdata.com/) data observability platform.
 
 ## Description
 
-This project provides an AI assistant interface for managing Sifflet data quality incidents efficiently. The assistant can perform various actions
-such as:
+This project provides an MCP server interface for interacting with the Sifflet data quality platform. The server enables various data quality management operations such as:
 
-- Listing incidents
-- Getting incident details
-- Closing incidents
-- Managing rules
-- Checking asset data
+- Exploring assets and their metadata
+- Exploring monitors or generation yaml for monitor-as-code
+- Searching incidents
+- Exploring impacted assets downstream and impact analysis
 
-Built with Chainlit, the interface provides a chat experience with AI-powered assistance backed by Claude 3.5 Sonnet.
 
 ## Usage
 ### Prerequisites
