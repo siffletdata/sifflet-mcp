@@ -1,7 +1,7 @@
 [project]
 name = "sifflet-mcp"
 version = "0.1.0"
-description = "Basic MCP server for Sifflet"
+description = "MCP server for interaction with Sifflet data observability platform"
 readme = "README.md"
 authors = [
     { name = "Baptiste Azéma", email = "baptiste@siffletdata.com" },
