@@ -73,11 +73,16 @@ def get_backend_api_client() -> ApiClient:
     return api_client
 
 
-@mcp.tool("asset_by_urn")
+@mcp.tool(
+    "asset_by_urn",
+    description="""
+        Get asset information by urn. The urn is the unique identifier a asset, for example dataset:0826ce5c-7027-4857-aa47-b639265d1867. It can be found when you search for an asset.
+        """,
+)
 async def asset_by_urn(asset_urn: str) -> dict:
     asset_client = asset_api.AssetApi(get_backend_api_client())
     asset_details = asset_client.get_asset_by_urn(urn=asset_urn)
-    return {"asset": asset_details}
+    return {"asset": asset_details.to_dict()}
 
 
 @mcp.tool(
@@ -119,7 +124,7 @@ async def search_asset(
         ),
     )
     asset_details = asset_client.public_get_assets(asset_search_criteria)
-    return {"assets": asset_details}
+    return {"assets": asset_details.to_dict()}
 
 
 # Add incident resource
@@ -154,9 +159,9 @@ def get_all_incidents(
         user=user,
     )
     return {
-        "incidents": incident_api.IncidentApi(
-            get_backend_api_client()
-        ).get_all_incident(incident_search_criteria)
+        "incidents": incident_api.IncidentApi(get_backend_api_client())
+        .get_all_incident(incident_search_criteria)
+        .to_dict()
     }
 
 
@@ -164,25 +169,35 @@ def get_all_incidents(
 @mcp.tool("get_incident_by_issue_number")
 def close_incident(issue_nbr: int) -> dict:
     return {
-        "incident": incident_api.IncidentApi(
-            get_backend_api_client()
-        ).get_incident_by_issue_number(issue_nbr)
+        "incident": incident_api.IncidentApi(get_backend_api_client())
+        .get_incident_by_issue_number(issue_nbr)
+        .to_dict()
     }
 
 
-@mcp.tool("get_incident_details_by_issue_number")
+@mcp.tool(
+    "get_incident_details_by_issue_number",
+    description="""
+        Get incident details by issue number. The issue number is the id of the incident.
+        """,
+)
 async def incident_tool(issue_number: int) -> dict:
     incident_scope: IncidentScope = incident_api.IncidentApi(
         get_backend_api_client()
     ).get_incident_scope_by_issue_number(issue_number)
-    return {"incident_details": incident_scope}
+    return {"incident_details": incident_scope.to_dict()}
 
 
-@mcp.tool("get_rule_by_id")
-async def get_rule_by_id(rule_id: int) -> dict:
+@mcp.tool(
+    "get_monitor_by_id",
+    description="""
+          Get a monitor by id. The id is the monitor id.
+          """,
+)
+async def get_monitor_by_id(rule_id: int) -> dict:
     rule_api_client = rule_api.RuleApi(get_backend_api_client())
     rule_dto = rule_api_client.get_sifflet_rule_by_id(id=rule_id)
-    return {"rule": rule_dto}
+    return {"rule": rule_dto.to_dict()}
 
 
 @mcp.tool("close_incident_by_id_and_should_qualify_monitor")
@@ -201,7 +216,7 @@ async def close_incident_by_id_and_should_qualify_monitor(
     )
     incident_api_client.patch_incident(
         id=incident_id, patch_incident_dto=patch_incident_dto
-    )
+    ).to_dict()
 
 
 @mcp.tool("open_incident_by_id")
@@ -211,7 +226,7 @@ async def open_incident_by_id(incident_id: str) -> dict:
     patch_incident_dto = PatchIncidentDto(status="OPEN", qualification=None)
     incident_api_client.patch_incident(
         id=incident_id, patch_incident_dto=patch_incident_dto
-    )
+    ).to_dict()
 
 
 # Monitor as code
@@ -235,14 +250,13 @@ async def get_monitor_code_by_description(
           Get all downstream assets of an asset. An Urn is the unique identifier a asset, for example dataset:0826ce5c-7027-4857-aa47-b639265d1867. It can be found when you search for an asset.
           """,
 )
-async def get_downstream_assets_of_asset(urn: str):
+async def get_downstream_assets_of_asset(urn: str) -> dict:
     lineage_api_client = lineage_api.LineageApi(get_backend_api_client())
     downstreams = lineage_api_client.get_lineage_downstreams_by_urn(
         urn=urn, _check_return_type=False
     )
     # We need to convert the downstreams to a string to avoid getting the error "TypeError Object of type LineageEntityDto is not JSON serializable". See PLTE-1769.
-    downstreams_string = str(downstreams)
-    return {"downstreams": downstreams_string}
+    return {"downstreams": downstreams.to_dict()}
 
 
 def run_starlette_sse():
