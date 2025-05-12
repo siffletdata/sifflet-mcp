@@ -132,7 +132,7 @@ async def search_asset(
         ),
     )
     asset_details: PublicPageDtoPublicGetAssetListDto = asset_client.public_get_assets(
-        asset_search_criteria
+        asset_search_criteria, _check_return_type=False
     )
     return {"assets": asset_details.to_dict()}
 
@@ -210,9 +210,9 @@ async def get_incident_scope_by_issue_number(issue_number: int) -> dict:
         monitor_id is the unique identifier of the monitor, for example 3b8a1333-aef0-468a-893b-e87dfc095c82
         """,
 )
-async def get_monitor_details_by_id(monitor_id: int) -> dict:
+async def get_monitor_details_by_id(monitor_id: str) -> dict:
     rule_api_client = rule_api.RuleApi(get_backend_api_client())
-    rule_dto = rule_api_client.get_sifflet_rule_by_id(id=str(monitor_id))
+    rule_dto = rule_api_client.get_sifflet_rule_by_id(id=monitor_id)
     return {"monitor": rule_dto.to_dict()}
 
 
@@ -294,7 +294,7 @@ async def get_downstream_assets_of_asset(urn: str) -> dict:
             urn=urn, _check_return_type=False
         )
     )
-    dict_downstream = map(lambda x: x.to_dict(), downstreams)
+    dict_downstream = list(map(lambda x: x.to_dict(), downstreams))
     return {"downstreams": dict_downstream}
 
 
