@@ -1,15 +1,15 @@
-# Sifflet MCP
+# Sifflet MCP Server
 
-A Model Context Protocol (MCP) server for interacting with [Sifflet](https://www.siffletdata.com/) data observability platform.
+An MCP (Model Context Protocol) server that enables data observability operations with the [Sifflet](https://www.siffletdata.com/) platform.
 
-## Description
+## Features
 
-This project provides an MCP server interface for interacting with the Sifflet data quality platform. The server enables various data quality management operations such as:
+This project provides an MCP server enabling interactions with Sifflet API :
 
-- Exploring assets and their metadata
-- Exploring monitors or generation yaml for monitor-as-code
-- Searching incidents
-- Exploring impacted assets downstream and impact analysis
+- Explore assets: Search for tables, views, dashboards, and other data assets. View their schema, owners, tags, and their metadata.
+- Explore monitors: Discover existing monitors and generate their Monitor-as-Code YAML configurations.
+- Explore incidents: List all data observability incidents detected by the Sifflet platform.
+- Perform impact analysis: Start from an incident and trace the downstream assets affected.
 
 
 ## Usage
