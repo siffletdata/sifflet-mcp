@@ -39,7 +39,7 @@ Add the following configuration in the `mcp.json`. Follow [Cursor instructions](
       "command": "uv run --with sifflet-mcp --no-project sifflet-mcp",
       "env": {
         "SIFFLET_API_TOKEN": "<access_token>",
-        "SIFFLET_URL": "<your_sifflet_backend_url>"
+        "SIFFLET_BACKEND_URL": "<your_sifflet_backend_url>"
       }
     }
   }
@@ -60,7 +60,7 @@ Then, add the following configuration to your `claude_desktop_config.json` file:
       "args": ["sifflet-mcp"],
       "env": {
         "SIFFLET_API_TOKEN": "<access_token>",
-        "SIFFLET_URL": "<your_sifflet_backend_url>"
+        "SIFFLET_BACKEND_URL": "<your_sifflet_backend_url>"
       }
     }
   }

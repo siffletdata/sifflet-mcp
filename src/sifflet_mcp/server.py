@@ -167,7 +167,7 @@ def get_all_incidents(
 
 # Add incident resource
 @mcp.tool("get_incident_by_issue_number")
-def close_incident(issue_nbr: int) -> dict:
+def get_incident_by_issue_number(issue_nbr: int) -> dict:
     return {
         "incident": incident_api.IncidentApi(get_backend_api_client())
         .get_incident_by_issue_number(issue_nbr)
@@ -181,7 +181,7 @@ def close_incident(issue_nbr: int) -> dict:
         Get incident details by issue number. The issue number is the id of the incident.
         """,
 )
-async def incident_tool(issue_number: int) -> dict:
+async def get_incident_details_by_issue_number(issue_number: int) -> dict:
     incident_scope: IncidentScope = incident_api.IncidentApi(
         get_backend_api_client()
     ).get_incident_scope_by_issue_number(issue_number)
