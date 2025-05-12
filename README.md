@@ -21,8 +21,8 @@ This project provides an MCP server enabling interactions with Sifflet API :
     curl -LsSf https://astral.sh/uv/install.sh | sh
   ```
 - A Sifflet backend running locally or remotely. You will need the following information:
-  - `<access_token>`: you can find more information on how to generate it [here](https://docs.siffletdata.com/docs/generate-an-api-token)
-  - `<your_sifflet_backend_url>`: Full URL to the Sifflet backend for instance: `https://<tenant_name>.siffletdata.com/api/`
+  - `SIFFLET_API_TOKEN`: you can find more information on how to generate it [here](https://docs.siffletdata.com/docs/generate-an-api-token)
+  - `SIFFLET_BACKEND_URL`: Full URL to the Sifflet backend for instance: `https://<tenant_name>.siffletdata.com/api/`
 
 
 
@@ -39,7 +39,7 @@ Add the following configuration in the `mcp.json`. Follow [Cursor instructions](
       "command": "uv run --with sifflet-mcp --no-project sifflet-mcp",
       "env": {
         "SIFFLET_API_TOKEN": "<access_token>",
-        "SIFFLET_BACKEND_URL": "<your_sifflet_backend_url>"
+        "SIFFLET_BACKEND_URL": "https://<tenant_name>.siffletdata.com/api/"
       }
     }
   }
@@ -60,7 +60,7 @@ Then, add the following configuration to your `claude_desktop_config.json` file:
       "args": ["sifflet-mcp"],
       "env": {
         "SIFFLET_API_TOKEN": "<access_token>",
-        "SIFFLET_BACKEND_URL": "<your_sifflet_backend_url>"
+        "SIFFLET_BACKEND_URL": "https://<tenant_name>.siffletdata.com/api/"
       }
     }
   }
