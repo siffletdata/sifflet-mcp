@@ -56,7 +56,8 @@ Then, add the following configuration to your `claude_desktop_config.json` file:
 {
   "mcpServers": {
     "sifflet-mcp": {
-      "command": "uv run --with sifflet-mcp --no-project sifflet-mcp",
+      "command": "uvx",
+      "args": ["sifflet-mcp"],
       "env": {
         "SIFFLET_API_TOKEN": "<access_token>",
         "SIFFLET_URL": "<your_sifflet_backend_url>"
