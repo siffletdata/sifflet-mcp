@@ -16,8 +16,11 @@ from sifflet_sdk.client.api import (
     assets_api,
     lineage_api,
 )
+from sifflet_sdk.client.model.asset_dto import AssetDto
 from sifflet_sdk.client.model.incident_scope import IncidentScope
 from sifflet_sdk.client.model.incident_search_criteria import IncidentSearchCriteria
+from sifflet_sdk.client.model.issue_details_dto import IssueDetailsDto
+from sifflet_sdk.client.model.lineage_entity_dto import LineageEntityDto
 from sifflet_sdk.client.model.patch_incident_dto import PatchIncidentDto
 from sifflet_sdk.client.model.public_asset_filter_dto import PublicAssetFilterDto
 from sifflet_sdk.client.model.public_asset_pagination_dto import (
@@ -25,6 +28,9 @@ from sifflet_sdk.client.model.public_asset_pagination_dto import (
 )
 from sifflet_sdk.client.model.public_asset_search_criteria_dto import (
     PublicAssetSearchCriteriaDto,
+)
+from sifflet_sdk.client.model.public_page_dto_public_get_asset_list_dto import (
+    PublicPageDtoPublicGetAssetListDto,
 )
 from sifflet_sdk.client.model.public_reference_by_id_or_email_dto import (
     PublicReferenceByIdOrEmailDto,
@@ -81,7 +87,7 @@ def get_backend_api_client() -> ApiClient:
 )
 async def asset_by_urn(asset_urn: str) -> dict:
     asset_client = asset_api.AssetApi(get_backend_api_client())
-    asset_details = asset_client.get_asset_by_urn(urn=asset_urn)
+    asset_details: AssetDto = asset_client.get_asset_by_urn(urn=asset_urn)
     return {"asset": asset_details.to_dict()}
 
 
@@ -94,6 +100,8 @@ async def asset_by_urn(asset_urn: str) -> dict:
         owners is a list of owners emails associated with the asset
         tags is a list of tags associated with the asset
         text_search is a string to search in the asset name or description
+        items_per_page is the number of items to return per page
+        page is the page number to return. Pages start at 0.
         """,
 )
 async def search_asset(
@@ -102,12 +110,12 @@ async def search_asset(
     text_search: str,
     asset_type: List[str],
     health_status: List[str],
-    owners: List[str],
+    owners_email: List[str],
     tags: List[str],
 ) -> dict:
     # use public API
     asset_client = assets_api.AssetsApi(get_backend_api_client())
-    owners_list = [PublicReferenceByIdOrEmailDto(email=owner) for owner in owners]
+    owners_list = [PublicReferenceByIdOrEmailDto(email=owner) for owner in owners_email]
     tag_list = [PublicReferenceByIdOrNameDto(name=tag) for tag in tags]
 
     asset_search_criteria = PublicAssetSearchCriteriaDto(
@@ -123,30 +131,32 @@ async def search_asset(
             tags=tag_list,
         ),
     )
-    asset_details = asset_client.public_get_assets(asset_search_criteria)
+    asset_details: PublicPageDtoPublicGetAssetListDto = asset_client.public_get_assets(
+        asset_search_criteria
+    )
     return {"assets": asset_details.to_dict()}
 
 
 # Add incident resource
 @mcp.tool(
-    "get_all_incidents",
+    "search_incidents",
     description="""
-          Get all incidents. You can filter the incidents.
+          Search incidents
           Sort is done by createdAt by default. By default sort is descending. But you can change it using sort=asc.
+          You can filter by status, user and text search.
           Status can be OPEN, IN_PROGRESS, CLOSED.
-          User can be a list of users.
           Text search is a string.
           Pages start at 0.
           """,
 )
-def get_all_incidents(
+async def search_incidents(
     items_per_page: int,
     page: int,
     status: list[str],
     text_search: str,
     user: list[str],
     sort: str = "desc",
-):
+) -> dict:
     if sort not in ["asc", "desc"]:
         raise ValueError("Sort must be either 'asc' or 'desc'")
     sort_list = ["createdDate,DESC"] if sort == "desc" else ["createdDate,ASC"]
@@ -156,7 +166,6 @@ def get_all_incidents(
         sort=sort_list,
         status=status,
         text_search=text_search,
-        user=user,
     )
     return {
         "incidents": incident_api.IncidentApi(get_backend_api_client())
@@ -166,22 +175,27 @@ def get_all_incidents(
 
 
 # Add incident resource
-@mcp.tool("get_incident_by_issue_number")
-def get_incident_by_issue_number(issue_nbr: int) -> dict:
-    return {
-        "incident": incident_api.IncidentApi(get_backend_api_client())
-        .get_incident_by_issue_number(issue_nbr)
-        .to_dict()
-    }
+@mcp.tool(
+    "get_incident_by_issue_number",
+    description="""
+        Get incident details by issue number. The issue number is the unique identifier of the incident, for example 1234.
+        """,
+)
+async def get_incident_details_by_issue_number(issue_nbr: int) -> dict:
+    incident_details: IssueDetailsDto = incident_api.IncidentApi(
+        get_backend_api_client()
+    ).get_incident_by_issue_number(issue_nbr)
+    return {"incident": incident_details.to_dict()}
 
 
 @mcp.tool(
-    "get_incident_details_by_issue_number",
+    "get_incident_scope_by_issue_number",
     description="""
-        Get incident details by issue number. The issue number is the id of the incident.
+        Get incident scope by issue number. The issue number is the unique identifier of the incident, for example 1234.
+        The scope is the list of assets and monitors associated with the incident.
         """,
 )
-async def get_incident_details_by_issue_number(issue_number: int) -> dict:
+async def get_incident_scope_by_issue_number(issue_number: int) -> dict:
     incident_scope: IncidentScope = incident_api.IncidentApi(
         get_backend_api_client()
     ).get_incident_scope_by_issue_number(issue_number)
@@ -189,21 +203,27 @@ async def get_incident_details_by_issue_number(issue_number: int) -> dict:
 
 
 @mcp.tool(
-    "get_monitor_by_id",
+    "get_monitor_details_by_id",
     description="""
-          Get a monitor by id. The id is the monitor id.
-          """,
+        Get monitor details by id. 
+        The monitor_id is the monitor UUID. The id can be found when you search for a monitor.
+        monitor_id is the unique identifier of the monitor, for example 3b8a1333-aef0-468a-893b-e87dfc095c82
+        """,
 )
-async def get_monitor_by_id(rule_id: int) -> dict:
+async def get_monitor_details_by_id(monitor_id: int) -> dict:
     rule_api_client = rule_api.RuleApi(get_backend_api_client())
-    rule_dto = rule_api_client.get_sifflet_rule_by_id(id=rule_id)
-    return {"rule": rule_dto.to_dict()}
+    rule_dto = rule_api_client.get_sifflet_rule_by_id(id=str(monitor_id))
+    return {"monitor": rule_dto.to_dict()}
 
 
-@mcp.tool("close_incident_by_id_and_should_qualify_monitor")
-async def close_incident_by_id_and_should_qualify_monitor(
-    incident_id: str, should_qualify_monitor: bool
-) -> dict:
+@mcp.tool(
+    "close_incident_by_id",
+    description="""
+        Close an incident by id. The id is the unique identifier of the incident, for example 1234.
+        The should_qualify_monitor is a boolean that indicates if the monitor should be qualified or not.
+        """,
+)
+async def close_incident_by_id(incident_id: str, should_qualify_monitor: bool) -> dict:
     incident_api_client = incident_api.IncidentApi(get_backend_api_client())
     if should_qualify_monitor:
         qualification = "QUALIFIED_MONITORS_REVIEWED"
@@ -214,23 +234,40 @@ async def close_incident_by_id_and_should_qualify_monitor(
         status="CLOSED",
         qualification=qualification,
     )
-    incident_api_client.patch_incident(
+    result = incident_api_client.patch_incident(
         id=incident_id, patch_incident_dto=patch_incident_dto
     ).to_dict()
+    return {"incident": result}
 
 
-@mcp.tool("open_incident_by_id")
+@mcp.tool(
+    "open_incident_by_id",
+    description="""
+        Open an incident by id. The id is the unique identifier of the incident, for example 1234.
+        """,
+)
 async def open_incident_by_id(incident_id: str) -> dict:
     incident_api_client = incident_api.IncidentApi(get_backend_api_client())
 
     patch_incident_dto = PatchIncidentDto(status="OPEN", qualification=None)
-    incident_api_client.patch_incident(
+    result = incident_api_client.patch_incident(
         id=incident_id, patch_incident_dto=patch_incident_dto
     ).to_dict()
+    return {"incident": result}
 
 
 # Monitor as code
-@mcp.tool("get_monitor_code_by_description")
+@mcp.tool(
+    "get_monitor_code_by_description",
+    description="""
+        Returns a monitor configuration based on the input query
+        The input is a description of the monitor you want to create.
+        The description should be a natural language description of the monitor you want to create.
+        The dataset_ids is a list of dataset ids that the monitor should be applied to. You must provide at least one dataset id. You can find the id of the dataset using search_asset. 
+        The description is a string that describes the monitor you want to create. For example: "Create a monitor that checks if the number of rows in the table is greater than 1000".
+        The result is a YAML string that contains the monitor configuration.
+        """,
+)
 async def get_monitor_code_by_description(
     description: str, dataset_ids: list[str]
 ) -> dict:
@@ -247,16 +284,18 @@ async def get_monitor_code_by_description(
 @mcp.tool(
     "get_downstream_assets_of_asset",
     description="""
-          Get all downstream assets of an asset. An Urn is the unique identifier a asset, for example dataset:0826ce5c-7027-4857-aa47-b639265d1867. It can be found when you search for an asset.
+          Get all downstream assets of an asset. An Urn is the unique identifier of an asset, for example dataset:0826ce5c-7027-4857-aa47-b639265d1867. It can be found when you search for an asset.
           """,
 )
 async def get_downstream_assets_of_asset(urn: str) -> dict:
     lineage_api_client = lineage_api.LineageApi(get_backend_api_client())
-    downstreams = lineage_api_client.get_lineage_downstreams_by_urn(
-        urn=urn, _check_return_type=False
+    downstreams: List[LineageEntityDto] = (
+        lineage_api_client.get_lineage_downstreams_by_urn(
+            urn=urn, _check_return_type=False
+        )
     )
-    # We need to convert the downstreams to a string to avoid getting the error "TypeError Object of type LineageEntityDto is not JSON serializable". See PLTE-1769.
-    return {"downstreams": downstreams.to_dict()}
+    dict_downstream = map(lambda x: x.to_dict(), downstreams)
+    return {"downstreams": dict_downstream}
 
 
 def run_starlette_sse():
