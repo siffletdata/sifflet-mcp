@@ -7,7 +7,7 @@ import uvicorn
 from dotenv import load_dotenv
 from mcp.server import FastMCP
 from mcp.server.sse import SseServerTransport
-from sifflet_sdk.client import Configuration, ApiClient
+from sifflet_sdk.client import Configuration, ApiClient, PublicTagReferenceDto
 from sifflet_sdk.client.api import (
     incident_api,
     rule_api,
@@ -16,29 +16,28 @@ from sifflet_sdk.client.api import (
     assets_api,
     lineage_api,
 )
-from sifflet_sdk.client.model.asset_dto import AssetDto
-from sifflet_sdk.client.model.incident_scope import IncidentScope
-from sifflet_sdk.client.model.incident_search_criteria import IncidentSearchCriteria
-from sifflet_sdk.client.model.issue_details_dto import IssueDetailsDto
-from sifflet_sdk.client.model.lineage_entity_dto import LineageEntityDto
-from sifflet_sdk.client.model.patch_incident_dto import PatchIncidentDto
-from sifflet_sdk.client.model.public_asset_filter_dto import PublicAssetFilterDto
-from sifflet_sdk.client.model.public_asset_pagination_dto import (
+from sifflet_sdk.client.models.asset_dto import AssetDto
+from sifflet_sdk.client.models.incident_scope import IncidentScope
+from sifflet_sdk.client.models.incident_search_criteria import IncidentSearchCriteria
+from sifflet_sdk.client.models.issue_details_dto import IssueDetailsDto
+from sifflet_sdk.client.models.lineage_entity_dto import LineageEntityDto
+from sifflet_sdk.client.models.patch_incident_dto import PatchIncidentDto
+from sifflet_sdk.client.models.public_asset_filter_dto import PublicAssetFilterDto
+from sifflet_sdk.client.models.public_asset_pagination_dto import (
     PublicAssetPaginationDto,
 )
-from sifflet_sdk.client.model.public_asset_search_criteria_dto import (
+from sifflet_sdk.client.models.public_asset_search_criteria_dto import (
     PublicAssetSearchCriteriaDto,
 )
-from sifflet_sdk.client.model.public_page_dto_public_get_asset_list_dto import (
+from sifflet_sdk.client.models.public_page_dto_public_get_asset_list_dto import (
     PublicPageDtoPublicGetAssetListDto,
 )
-from sifflet_sdk.client.model.public_reference_by_id_or_email_dto import (
+from sifflet_sdk.client.models.public_reference_by_id_or_email_dto import (
     PublicReferenceByIdOrEmailDto,
 )
-from sifflet_sdk.client.model.public_reference_by_id_or_name_dto import (
-    PublicReferenceByIdOrNameDto,
+from sifflet_sdk.client.models.text_to_monitor_request_dto import (
+    TextToMonitorRequestDto,
 )
-from sifflet_sdk.client.model.text_to_monitor_request_dto import TextToMonitorRequestDto
 from starlette.applications import Starlette
 from starlette.requests import Request
 from starlette.routing import Mount, Route
@@ -70,7 +69,7 @@ def get_backend_api_client() -> ApiClient:
             "SIFFLET_BACKEND_URL environment variable not set in Sifflet MCP configuration"
         )
 
-    configuration = Configuration(host=SIFFLET_BACKEND_URL, discard_unknown_keys=False)
+    configuration = Configuration(host=SIFFLET_BACKEND_URL)
     api_client = ApiClient(
         configuration,
         header_name=header_authorization_name,
@@ -116,23 +115,23 @@ async def search_asset(
     # use public API
     asset_client = assets_api.AssetsApi(get_backend_api_client())
     owners_list = [PublicReferenceByIdOrEmailDto(email=owner) for owner in owners_email]
-    tag_list = [PublicReferenceByIdOrNameDto(name=tag) for tag in tags]
+    tag_list = [PublicTagReferenceDto(name=tag) for tag in tags]
 
     asset_search_criteria = PublicAssetSearchCriteriaDto(
         pagination=PublicAssetPaginationDto(
-            items_per_page=items_per_page,
+            itemsPerPage=items_per_page,
             page=page,
         ),
         filter=PublicAssetFilterDto(
-            text_search=text_search,
-            asset_type=asset_type,
-            health_status=health_status,
+            textSearch=text_search,
+            assetType=asset_type,
+            healthStatus=health_status,
             owners=owners_list,
             tags=tag_list,
         ),
     )
     asset_details: PublicPageDtoPublicGetAssetListDto = asset_client.public_get_assets(
-        asset_search_criteria, _check_return_type=False
+        asset_search_criteria
     )
     return {"assets": asset_details.to_dict()}
 
@@ -154,18 +153,17 @@ async def search_incidents(
     page: int,
     status: list[str],
     text_search: str,
-    user: list[str],
     sort: str = "desc",
 ) -> dict:
     if sort not in ["asc", "desc"]:
         raise ValueError("Sort must be either 'asc' or 'desc'")
     sort_list = ["createdDate,DESC"] if sort == "desc" else ["createdDate,ASC"]
     incident_search_criteria = IncidentSearchCriteria(
-        items_per_page=items_per_page,
+        itemsPerPage=items_per_page,
         page=page,
         sort=sort_list,
         status=status,
-        text_search=text_search,
+        textSearch=text_search,
     )
     return {
         "incidents": incident_api.IncidentApi(get_backend_api_client())
@@ -275,7 +273,7 @@ async def get_monitor_code_by_description(
         get_backend_api_client()
     )
     text_to_monitor_dto = TextToMonitorRequestDto(
-        dataset_ids=dataset_ids, input_text=description
+        datasetIds=dataset_ids, inputText=description
     )
     generated_monitor = text_to_monitor_client.text_to_monitor(text_to_monitor_dto)
     return generated_monitor.yaml_code
@@ -290,9 +288,7 @@ async def get_monitor_code_by_description(
 async def get_downstream_assets_of_asset(urn: str) -> dict:
     lineage_api_client = lineage_api.LineageApi(get_backend_api_client())
     downstreams: List[LineageEntityDto] = (
-        lineage_api_client.get_lineage_downstreams_by_urn(
-            urn=urn, _check_return_type=False
-        )
+        lineage_api_client.get_lineage_downstreams_by_urn(urn=urn)
     )
     dict_downstream = list(map(lambda x: x.to_dict(), downstreams))
     return {"downstreams": dict_downstream}
