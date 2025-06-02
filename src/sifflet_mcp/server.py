@@ -210,7 +210,7 @@ async def get_incident_scope_by_issue_number(issue_number: int) -> dict:
 )
 async def get_monitor_details_by_id(monitor_id: str) -> dict:
     rule_api_client = rule_api.RuleApi(get_backend_api_client())
-    rule_dto = rule_api_client.get_sifflet_rule_by_id(id=monitor_id)
+    rule_dto = rule_api_client.get_sifflet_rule_details(id=monitor_id)
     return {"monitor": rule_dto.to_dict()}
 
 
