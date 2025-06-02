@@ -11,6 +11,13 @@ This project provides an MCP server enabling interactions with Sifflet API :
 - Explore incidents: List all data observability incidents detected by the Sifflet platform.
 - Perform impact analysis: Start from an incident and trace the downstream assets affected.
 
+## Sample Use Cases
+
+Here are a few scenarios where the Sifflet MCP Server can be particularly helpful:
+
+- **Understanding Downstream Impact**: You're modifying a dbt model and need to identify the owners of dependent downstream models and dashboards. The MCP server can provide these details, allowing you to proactively notify them about your upcoming changes.
+- **Accessing Up-to-Date Table Metadata**: You're about to update a table in your data warehouse. Before you proceed, you can query the MCP server to get its latest metadata. This includes information on how the table is currently monitored in Sifflet, whether it's involved in any ongoing incidents, the list of its frequent users, and other relevant operational details.
+- **Bootstrapping New Asset Monitoring**: You're creating a new table (or dbt model) and want to ensure it's well-monitored from the start. You can ask the MCP server to list the Sifflet monitors already created for similar existing assets. The server can then provide the Monitor-as-Code YAML configurations, which you can adapt and deploy.
 
 ## Usage
 ### Prerequisites
@@ -92,3 +99,8 @@ To add new features or tools:
 
 1. Add new tool functions in `server.py` using the `@mcp.tool` decorator
 2. The server will automatically discover and use these tools
+
+## Reporting Problems
+
+If you encounter any problems or have a bug to report, please feel free to open an issue on this GitHub repository.
+Alternatively, you can reach out to your Sifflet Customer Success team.
