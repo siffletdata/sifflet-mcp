@@ -43,7 +43,8 @@ Add the following configuration in the `mcp.json`. Follow [Cursor instructions](
 {
   "mcpServers": {
     "mcp_server_sifflet": {
-      "command": "uv run --with sifflet-mcp --no-project sifflet-mcp",
+      "command": "uvx",
+      "args": ["sifflet-mcp@latest"],
       "env": {
         "SIFFLET_API_TOKEN": "<access_token>",
         "SIFFLET_BACKEND_URL": "https://<tenant_name>.siffletdata.com/api/"
@@ -53,7 +54,7 @@ Add the following configuration in the `mcp.json`. Follow [Cursor instructions](
 }
 ```
 
-**Note:** You may need to use the full path to the `uv` executable in the `command` field. You can find the full path by running `which uv` in your terminal.
+**Note:** You may need to use the full path to the `uvx` executable in the `command` field. You can find the full path by running `which uvx` in your terminal.
 
 #### Claude Desktop
 
@@ -66,7 +67,7 @@ Then, add the following configuration to your `claude_desktop_config.json` file:
   "mcpServers": {
     "sifflet-mcp": {
       "command": "uvx",
-      "args": ["sifflet-mcp"],
+      "args": ["sifflet-mcp@latest"],
       "env": {
         "SIFFLET_API_TOKEN": "<access_token>",
         "SIFFLET_BACKEND_URL": "https://<tenant_name>.siffletdata.com/api/"
