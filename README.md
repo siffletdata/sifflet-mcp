@@ -21,7 +21,7 @@ This project provides an MCP server enabling interactions with Sifflet API :
     curl -LsSf https://astral.sh/uv/install.sh | sh
   ```
 - A Sifflet backend running locally or remotely. You will need the following information:
-  - `SIFFLET_API_TOKEN`: you can find more information on how to generate it [here](https://docs.siffletdata.com/docs/generate-an-api-token)
+  - `SIFFLET_API_TOKEN`: you can find more information on how to generate it [here](https://docs.siffletdata.com/docs/generate-an-api-token). You can create a API token with the role `Viewer`.
   - `SIFFLET_BACKEND_URL`: Full URL to the Sifflet backend for instance: `https://<tenant_name>.siffletdata.com/api/`
 
 
@@ -46,7 +46,9 @@ Add the following configuration in the `mcp.json`. Follow [Cursor instructions](
 }
 ```
 
-#### Claude
+**Note:** You may need to use the full path to the `uv` executable in the `command` field. You can find the full path by running `which uv` in your terminal.
+
+#### Claude Desktop
 
 Follow the instructions in the [Claude documentation](https://modelcontextprotocol.io/quickstart/user#2-add-the-filesystem-mcp-server) to set up `claude_desktop_config.json`.
 
@@ -69,26 +71,8 @@ Then, add the following configuration to your `claude_desktop_config.json` file:
 
 ```
 
-## Development
+**Note:** You may need to use the full path to the `uvx` executable in the `command` field. You can find the full path by running `which uvx` in your terminal.
 
-Environment Setup
-```bash
-# clone the repository
-git clone https://github.com/siffletdata/sifflet-mcp.git
-cd sifflet-mcp
-# create a virtual environment
-uv venv
-# install pre-commit
-uv run pre-commit install
-# run the server
-uv run sifflet-mcp [--sse]
+## Contributing
 
-# Cursor setup: mcp.json or equivalent 
-# You may need to put the full path to the uv executable in the command field. You can get this by running `which uv` on MacOS/Linux or `where uv` on Windows.
-uv --directory <PATH_TO_PARENT_FOLDER>/sifflet-mcp run src/sifflet_mcp/server.py
-```
-
-To add new features or tools:
-
-1. Add new tool functions in `server.py` using the `@mcp.tool` decorator
-2. The server will automatically discover and use these tools
+For development setup and contribution guidelines, please see [CONTRIBUTING.md](CONTRIBUTING.md).
