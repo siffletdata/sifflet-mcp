@@ -42,6 +42,9 @@ from starlette.applications import Starlette
 from starlette.requests import Request
 from starlette.routing import Mount, Route
 
+SIFFLET_MCP = "sifflet-mcp"
+HEADER_APPLICATION_NAME = "X-Application-Name"
+
 logger = logging.getLogger(__name__)
 
 # Load environment variables
@@ -50,7 +53,7 @@ SIFFLET_API_TOKEN = os.environ.get("SIFFLET_API_TOKEN")
 SIFFLET_BACKEND_URL = os.environ.get("SIFFLET_BACKEND_URL")
 
 # Create the MCP server
-mcp = FastMCP("sifflet-mcp")
+mcp = FastMCP(SIFFLET_MCP)
 
 
 def get_backend_api_client() -> ApiClient:
@@ -75,6 +78,7 @@ def get_backend_api_client() -> ApiClient:
         header_name=header_authorization_name,
         header_value=token_prefix + SIFFLET_API_TOKEN,
     )
+    api_client.set_default_header(HEADER_APPLICATION_NAME, SIFFLET_MCP)
     return api_client
 
 
