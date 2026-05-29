@@ -8,6 +8,7 @@ This project provides an MCP server enabling interactions with Sifflet API :
 
 - Explore assets: Search for tables, views, dashboards, and other data assets. View their schema, owners, tags, and their metadata.
 - Explore monitors: Discover existing monitors and generate their Monitor-as-Code YAML configurations.
+- Generate new monitors from a description: turn a plain-English requirement (e.g. "alert when row count drops below 1000 on the 'orders' table") into a Monitor-as-Code YAML snippet for a given list of datasets. Requires `Editor` role on the targeted domain.
 - Explore incidents: List all data observability incidents detected by the Sifflet platform.
 - Perform impact analysis: Start from an incident and trace the downstream assets affected.
 
@@ -18,6 +19,7 @@ Here are a few scenarios where the Sifflet MCP Server can be particularly helpfu
 - **Understanding Downstream Impact**: You're modifying a dbt model and need to identify the owners of dependent downstream models and dashboards. The MCP server can provide these details, allowing you to proactively notify them about your upcoming changes.
 - **Accessing Up-to-Date Table Metadata**: You're about to update a table in your data warehouse. Before you proceed, you can query the MCP server to get its latest metadata. This includes information on how the table is currently monitored in Sifflet, whether it's involved in any ongoing incidents, the list of its frequent users, and other relevant operational details.
 - **Bootstrapping New Asset Monitoring**: You're creating a new table (or dbt model) and want to ensure it's well-monitored from the start. You can ask the MCP server to list the Sifflet monitors already created for similar existing assets. The server can then provide the Monitor-as-Code YAML configurations, which you can adapt and deploy.
+- **Generating a Monitor from a Description**: You want to export the YAML configuration of a Monitor you want to create (e.g. *"alert when row count drops below 1000 on the 'orders' table"*). The `get_monitor_code_by_description` tool returns a [Monitor-as-Code](https://docs.siffletdata.com/docs/monitors-as-code) YAML snippet for a given list of datasets that you can adapt and commit. Note: requires `Editor` role on the targeted domain (see Prerequisites).
 
 ## Usage
 ### Prerequisites
@@ -28,7 +30,9 @@ Here are a few scenarios where the Sifflet MCP Server can be particularly helpfu
     curl -LsSf https://astral.sh/uv/install.sh | sh
   ```
 - A Sifflet backend running locally or remotely. You will need the following information:
-  - `SIFFLET_API_TOKEN`: you can find more information on how to generate it [here](https://docs.siffletdata.com/docs/generate-an-api-token). You can create a API token with the role `Viewer`.
+  - `SIFFLET_API_TOKEN`: see [how to generate one](https://docs.siffletdata.com/docs/access-tokens#creating-an-access-token). A token with the `Viewer` 
+  role is enough for most tools. The `get_monitor_code_by_description` tool additionally requires `Editor` role
+  on the targeted domain. If you plan to use that tool, generate a token with `Editor` access on that domain.
   - `SIFFLET_BACKEND_URL`: Full URL to the Sifflet backend for instance: `https://<tenant_name>.siffletdata.com/api/`
 
 
