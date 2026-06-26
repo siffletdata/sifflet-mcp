@@ -54,6 +54,38 @@ from starlette.routing import Mount, Route
 SIFFLET_MCP = "sifflet-mcp"
 HEADER_APPLICATION_NAME = "X-Application-Name"
 
+# Guidance surfaced to the client describing how to drive the Snowflake
+# integration flow for a good user experience.
+MCP_INSTRUCTIONS = """\
+Creating a Snowflake integration (source) on Sifflet — follow this user experience:
+
+When the user asks to create or set up a new Snowflake integration:
+
+1. FIRST, before collecting anything, display the complete list of information the user must
+   provide or grant, so they know up front what to prepare:
+     - Authentication method (key-pair, username/password, or OAuth) — this determines which
+       credential fields are required
+     - The secret(s) for that method (e.g. RSA private key, password, or OAuth client secret) —
+       the user enters these directly in the Sifflet UI and never shares them in the conversation
+     - Snowflake account identifier (e.g. "xy12345.eu-west-1")
+     - Warehouse Sifflet should use to run its queries
+     - Snowflake user the credential is registered against (for key-pair / password methods)
+     - Credential name (links the credential to the source)
+     - Display name for the source in Sifflet
+     - Refresh schedule (optional CRON expression; manual-only if omitted)
+
+2. THEN prompt the user for each required piece ONE AT A TIME, waiting for their answer before
+   asking for the next, instead of requesting everything in a single message. Offer sensible
+   defaults where you can (e.g. a display name derived from the account identifier and user, or a
+   daily schedule). Ask the user to choose an authentication method before showing any credential
+   format — call create_credentials without auth_type to list the methods, then again with the
+   chosen auth_type to get the matching credential template.
+
+3. Once all details are gathered, run the tools in order: create_credentials (guides the user to
+   create the credential in the UI), then test_snowflake_connection, then create_snowflake_source,
+   then run_source. Only create the source if the connection test succeeds.
+"""
+
 logger = logging.getLogger(__name__)
 
 # Load environment variables
@@ -62,7 +94,7 @@ SIFFLET_API_TOKEN = os.environ.get("SIFFLET_API_TOKEN")
 SIFFLET_BACKEND_URL = os.environ.get("SIFFLET_BACKEND_URL")
 
 # Create the MCP server
-mcp = FastMCP(SIFFLET_MCP)
+mcp = FastMCP(SIFFLET_MCP, instructions=MCP_INSTRUCTIONS)
 
 
 def get_backend_api_client() -> ApiClient:
@@ -325,60 +357,153 @@ async def get_downstream_assets_of_asset(urn: str) -> dict:
 
 
 # Integrations / sources
+
+# Supported Snowflake authentication methods. Each entry describes how to build the JSON
+# credential "value" the user pastes into the Sifflet UI. The `template` builder returns the
+# fill-in-the-blanks content for that method, and `notes` are method-specific gotchas.
+SNOWFLAKE_AUTH_TYPES = {
+    "KEY_PAIR": {
+        "label": "Key-pair authentication (RSA private key)",
+        "description": (
+            "Connect with a Snowflake user and an RSA private key (PEM). Recommended for service "
+            "accounts and unattended ingestion."
+        ),
+        "default_name": "snowflake-keypair-credentials",
+        "default_description": "Snowflake key-pair credentials for Sifflet",
+        "template": lambda user: {
+            "user": user or "<SNOWFLAKE_USER>",
+            "privateKey": "-----BEGIN PRIVATE KEY-----\n<PASTE YOUR PEM PRIVATE KEY HERE>\n-----END PRIVATE KEY-----",
+            "privateKeyPassphrase": "<OPTIONAL: passphrase, or remove this line for an unencrypted key>",
+        },
+        "notes": [
+            "The privateKey must be a single-line JSON string using \\n for line breaks, not real "
+            "line breaks, otherwise the credential is not valid JSON.",
+            "If the key is not encrypted, remove the privateKeyPassphrase line entirely (and make "
+            "sure no trailing comma is left on the previous line).",
+        ],
+    },
+    "USER_PASSWORD": {
+        "label": "Username & password",
+        "description": "Connect with a Snowflake user and password.",
+        "default_name": "snowflake-user-password-credentials",
+        "default_description": "Snowflake username/password credentials for Sifflet",
+        "template": lambda user: {
+            "user": user or "<SNOWFLAKE_USER>",
+            "password": "<SNOWFLAKE_PASSWORD>",
+        },
+        "notes": [],
+    },
+    "OAUTH_MICROSOFT_ENTRA_ID": {
+        "label": "OAuth2 (Microsoft Entra ID)",
+        "description": (
+            "Connect through a Microsoft Entra ID OAuth2 integration using client credentials "
+            "(client id and secret)."
+        ),
+        "default_name": "snowflake-oauth-entra-id-credentials",
+        "default_description": "Snowflake OAuth2 (Microsoft Entra ID) credentials for Sifflet",
+        "template": lambda user: {
+            "authority": "<OAUTH AUTHORITY URL, e.g. https://login.microsoftonline.com/<tenant-id>>",
+            "clientId": "<OAUTH CLIENT ID>",
+            "clientSecret": "<OAUTH CLIENT SECRET>",
+            "oauthProvider": "<OAUTH PROVIDER, e.g. MICROSOFT_ENTRA_ID>",
+        },
+        "notes": [
+            "These values come from the OAuth integration configured in your identity provider "
+            "and Snowflake; no Snowflake user/password is needed.",
+        ],
+    },
+}
+
+
 @mcp.tool(
     "create_credentials",
     description="""
-        Guide the user through creating a Snowflake credential in the Sifflet UI for key-pair (private key)
-        authentication. This tool does NOT create the credential itself and never handles the private key: to keep
-        the secret out of the MCP server, your context and the conversation, the user must create the credential
-        manually in the Sifflet web app. The private key only ever travels from the user's browser to Sifflet.
-        This tool returns the credentials page URL, a suggested credential name and description, and a fill-in-the-blanks
-        content template for the user to paste their key into.
+        Guide the user through creating a Snowflake credential in the Sifflet UI. This tool does NOT create the
+        credential itself and never handles secrets (private key, password, client secret): to keep secrets out of
+        the MCP server, your context and the conversation, the user must create the credential manually in the
+        Sifflet web app. Secrets only ever travel from the user's browser to Sifflet.
+
+        Snowflake supports several authentication methods, and the required credential fields differ per method, so
+        this tool works in TWO steps:
+        1. Call it WITHOUT auth_type first. It returns the list of supported authentication methods in
+           `available_auth_types` and NO credential format. Present these to the user and ask which one they want.
+        2. Call it again WITH auth_type set to the user's chosen method. It then returns the credentials page URL, a
+           suggested name and description, and a fill-in-the-blanks content template specific to that method.
+        Never display a credential format before the user has chosen an authentication method.
+
+        auth_type is the chosen authentication method. Supported values: KEY_PAIR (RSA private key),
+        USER_PASSWORD (username & password), OAUTH_MICROSOFT_ENTRA_ID (OAuth2 via Microsoft Entra ID). Omit it on the
+        first call to ask the user which method to use.
         name is an optional desired credential name. If omitted, a sensible name is suggested. Whatever name the user
         finally uses is the value to pass as `credentials_name` to create_snowflake_source.
-        user is the optional Snowflake user the private key is registered against; it is used only to pre-fill the
-        (non-secret) template and is not sent anywhere.
+        user is the optional Snowflake user the credential is registered against; it is used only to pre-fill the
+        (non-secret) template for the methods that need it and is not sent anywhere.
         description is an optional human readable description; if omitted, one is suggested.
-        After calling this, instruct the user to create the credential in the UI, then continue with create_snowflake_source.
+        After the user has created the credential in the UI, continue with test_snowflake_connection and
+        create_snowflake_source.
         """,
 )
 async def create_credentials(
+    auth_type: str = None,
     name: str = None,
     user: str = None,
     description: str = None,
 ) -> dict:
     credential_page_url = f"{get_frontend_base_url()}/settings/credentials"
-    suggested_name = name or "snowflake-keypair-credentials"
-    suggested_description = description or "Snowflake key-pair credentials for Sifflet"
-    content_template = json.dumps(
-        {
-            "user": user or "<SNOWFLAKE_USER>",
-            "privateKey": "-----BEGIN PRIVATE KEY-----\n<PASTE YOUR PEM PRIVATE KEY HERE>\n-----END PRIVATE KEY-----",
-            "privateKeyPassphrase": "<OPTIONAL: passphrase, or remove this line for an unencrypted key>",
-        },
-        indent=2,
-    )
+
+    normalized_auth_type = auth_type.upper() if auth_type else None
+
+    # Step 1: no (valid) auth type chosen yet -> list the methods and ask the user to pick one.
+    # Intentionally do NOT return any credential format here.
+    if normalized_auth_type not in SNOWFLAKE_AUTH_TYPES:
+        return {
+            "action_required": (
+                "Ask the user which Snowflake authentication method they want to use, then call create_credentials "
+                "again with auth_type set to their choice."
+            ),
+            "available_auth_types": [
+                {
+                    "auth_type": key,
+                    "label": meta["label"],
+                    "description": meta["description"],
+                }
+                for key, meta in SNOWFLAKE_AUTH_TYPES.items()
+            ],
+            "note": (
+                "Do not display any credential format yet. The required credential fields depend on the chosen "
+                "authentication method, so wait for the user's choice before calling this tool again."
+            ),
+        }
+
+    # Step 2: auth type chosen -> return the matching credential template and instructions.
+    meta = SNOWFLAKE_AUTH_TYPES[normalized_auth_type]
+    suggested_name = name or meta["default_name"]
+    suggested_description = description or meta["default_description"]
+    content_template = json.dumps(meta["template"](user), indent=2)
+    instructions = [
+        f"Open the credentials page: {credential_page_url}",
+        "Click to add a new credential.",
+        f"Use the name '{suggested_name}' (or any name you prefer — remember it for the next step).",
+        f"Optionally set the description: '{suggested_description}'.",
+        "Fill in the credential content using the template below, replacing each <...> placeholder with your "
+        "actual values.",
+        *meta["notes"],
+        "Save the credential.",
+    ]
     return {
         "action_required": (
             "Create the credential manually in the Sifflet UI. The MCP server intentionally never handles your "
-            "private key, so it cannot create the credential for you."
+            "secrets, so it cannot create the credential for you."
         ),
+        "chosen_auth_type": normalized_auth_type,
         "credential_page_url": credential_page_url,
         "suggested_name": suggested_name,
         "suggested_description": suggested_description,
         "credential_content_template": content_template,
-        "instructions": [
-            f"Open the credentials page: {credential_page_url}",
-            "Click to add a new credential.",
-            f"Use the name '{suggested_name}' (or any name you prefer — remember it for the next step).",
-            f"Optionally set the description: '{suggested_description}'.",
-            "Fill in the credential content using the template below, replacing the placeholders with your "
-            "Snowflake user and PEM private key (and passphrase if your key is encrypted).",
-            "Save the credential.",
-        ],
+        "instructions": instructions,
         "next_step": (
-            "Once the credential is saved, call create_snowflake_source with credentials_name set to the name "
-            "you used."
+            "Once the credential is saved, call test_snowflake_connection and then create_snowflake_source with "
+            "credentials_name set to the name you used."
         ),
     }
 
