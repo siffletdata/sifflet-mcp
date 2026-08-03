@@ -1,6 +1,6 @@
 [project]
 name = "sifflet-mcp"
-version = "0.1.6"
+version = "0.1.7"
 description = "MCP server for interaction with Sifflet data observability platform"
 readme = "README.md"
 authors = [
@@ -10,7 +10,7 @@ authors = [
 ]
 requires-python = ">=3.13"
 dependencies = [
-    "mcp>=1.8.1",
+    "mcp>=1.8.1,<2",
     "python-dotenv>=1.1.0",
     "sifflet-sdk>=0.3.22",
 ]
